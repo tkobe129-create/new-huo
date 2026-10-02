@@ -8,8 +8,10 @@
  */
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://jtshtmhjplhapdwnulbk.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0c2h0bWhqcGxoYXBkd251bGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzYwMzUsImV4cCI6MjA5MzU1MjAzNX0.WfM2DIRstmsHQN5l7oQ51pHajBZ5a9TySKnV_hbtxEY'
+// 生产环境必须通过变量注入自建 Supabase 的地址和 anon key。
+// 不要把真实密钥写入源码或文档。
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 let supabase = null
 
