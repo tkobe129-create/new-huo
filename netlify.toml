@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Ensure Nitro selects the Netlify server preset during CI builds.
+  NETLIFY = "true"
+
+# TanStack Start + Nitro generates the Netlify server/function output during build.
+# Supabase remains the application's external data service; no DATABASE_URL is
+# required for this deployment because the app uses Supabase rather than pg.
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
