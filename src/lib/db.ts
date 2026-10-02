@@ -1,7 +1,7 @@
 import { pendingMigrations } from "../../scripts/migration-plan.mjs";
 
 /** Which database backend is active. */
-export type DbSource = "neon" | "pglite";
+export type DbSource = "turso" | "neon" | "pglite";
 
 // An empty/whitespace DATABASE_URL (an easy misconfig in deploy UIs) must mean
 // "unset" — otherwise production would silently run on the PGLite fallback.
@@ -9,6 +9,8 @@ const rawDatabaseUrl =
   typeof process !== "undefined" ? process.env.DATABASE_URL : undefined;
 const databaseUrl =
   rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl : undefined;
+const tursoUrl = typeof process !== "undefined" ? process.env.TURSO_DATABASE_URL?.trim() : undefined;
+const tursoToken = typeof process !== "undefined" ? process.env.TURSO_AUTH_TOKEN?.trim() : undefined;
 
 /**
  * Active backend: real **Neon** when `DATABASE_URL` is set (deployed / configured
@@ -16,7 +18,7 @@ const databaseUrl =
  * the app has a working database even with nothing configured — the live preview
  * included. Swap in Neon later by just setting `DATABASE_URL`; no code changes.
  */
-export const dbSource: DbSource = databaseUrl ? "neon" : "pglite";
+export const dbSource: DbSource = tursoUrl && tursoToken ? "turso" : databaseUrl ? "neon" : "pglite";
 
 /**
  * Minimal shared SQL surface, satisfied by both Neon and PGLite. Both the
@@ -169,6 +171,15 @@ async function createPgliteSql(): Promise<Sql> {
 
 let sqlPromise: Promise<Sql> | null = null;
 
+async function createTursoSql(): Promise<Sql> {
+  const { createClient } = await import("@libsql/client");
+  const client = createClient({ url: tursoUrl as string, authToken: tursoToken as string });
+  return toSql(async <T>(text: string, params: unknown[]) => {
+    const result = await client.execute({ sql: text, args: params as any[] });
+    return result.rows as unknown as T[];
+  });
+}
+
 async function createSql(): Promise<Sql> {
   if (typeof window !== "undefined") {
     throw new Error(
@@ -176,7 +187,11 @@ async function createSql(): Promise<Sql> {
         "or a server route loader, never from client code.",
     );
   }
-  return dbSource === "neon" ? createNeonSql() : createPgliteSql();
+  return dbSource === "turso"
+    ? createTursoSql()
+    : dbSource === "neon"
+      ? createNeonSql()
+      : createPgliteSql();
 }
 
 /**
