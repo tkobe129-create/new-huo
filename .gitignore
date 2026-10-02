@@ -3,5 +3,3 @@ node_modules/
 .github_repo
 .env
 .env.*
-# Local self-hosted Supabase credentials
-/deploy/oracle/.env
