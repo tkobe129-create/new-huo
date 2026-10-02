@@ -1,15 +1,18 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = ".netlify/static"
 
 [build.environment]
   NODE_VERSION = "22"
-  # Ensure Nitro selects the Netlify server preset during CI builds.
+  # Nitro selects its Netlify server preset and emits the server function.
   NETLIFY = "true"
 
-# TanStack Start + Nitro generates the Netlify server/function output during build.
-# Supabase remains the application's external data service; no DATABASE_URL is
-# required for this deployment because the app uses Supabase rather than pg.
+# Configure these in Netlify UI, never commit them:
+# TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, BETTER_AUTH_URL, BETTER_AUTH_SECRET
+# The Turso token is server-only and must not use a VITE_ prefix.
+
+[functions]
+  directory = ".netlify/functions-internal"
 
 [[headers]]
   for = "/assets/*"
