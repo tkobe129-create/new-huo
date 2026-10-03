@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
-import { authClient, GROK_PROVIDERS, authEnabled, signIn, signOut } from "./client";
+import { authClient, authEnabled, signOut } from "./client";
 import { hasGateSessionMarker } from "./gate-session-marker";
 import { resolveSignInGateState } from "./sign-in-gate";
 import { useCurrentUser, useCurrentUserState } from "./use-current-user";
@@ -98,8 +98,6 @@ export function SignInButtons() {
       <button type="button" className="text-sm text-muted underline" onClick={() => { setMode(mode === "login" ? "register" : "login"); setMessage(""); }}>
         {mode === "login" ? "没有账号？注册账号" : "已有账号？返回登录"}
       </button>
-      <div className="border-t border-border pt-3 text-center text-xs text-muted">也可以使用第三方登录</div>
-      {GROK_PROVIDERS.map((p) => <button key={p.providerId} type="button" onClick={() => signIn(p.providerId, { callbackURL: "/" })} className="h-10 rounded-md border border-border">Continue with {p.label}</button>)}
     </div>
   );
 }
