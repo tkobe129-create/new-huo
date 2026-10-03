@@ -7,6 +7,7 @@ import { RecordsView } from "@/components/records-view";
 import { ReagentsView, type SavePayload } from "@/components/reagents-view";
 import { ScanView } from "@/components/scan-view";
 import { AppShell, type TabId } from "@/components/shell";
+import { SignInButtons, SignInGate } from "@/lib/auth/gates";
 import { computeAlerts } from "@/lib/alerts";
 import {
   createRestockOrder,
@@ -122,7 +123,18 @@ function Home() {
   });
 
   return (
-    <AppShell tab={tab} onTab={setTab} alertCount={alertCount}>
+    <SignInGate
+      fallback={
+        <div className="grid min-h-dvh place-items-center bg-bg px-6 text-fg">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-card">
+            <h1 className="text-xl font-semibold">权盾智检</h1>
+            <p className="mt-2 text-sm text-muted">登录后进入试剂管家</p>
+            <div className="mt-6"><SignInButtons /></div>
+          </div>
+        </div>
+      }
+    >
+      <AppShell tab={tab} onTab={setTab} alertCount={alertCount}>
       {loading ? (
         <p className="py-16 text-center text-sm text-muted">正在读取云端库存…</p>
       ) : null}
@@ -168,6 +180,7 @@ function Home() {
       ) : null}
 
       {tab === "records" ? <RecordsView records={records} /> : null}
-    </AppShell>
+      </AppShell>
+    </SignInGate>
   );
 }
