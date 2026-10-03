@@ -1,6 +1,6 @@
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
-import { GROK_PROVIDERS, authEnabled, signIn, signOut } from "./client";
+import { authClient, GROK_PROVIDERS, authEnabled, signIn, signOut } from "./client";
 import { hasGateSessionMarker } from "./gate-session-marker";
 import { resolveSignInGateState } from "./sign-in-gate";
 import { useCurrentUser, useCurrentUserState } from "./use-current-user";
@@ -64,18 +64,42 @@ export function SignInGate({
 }
 
 export function SignInButtons() {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    try {
+      const result = mode === "login"
+        ? await authClient.signIn.email({ email, password, callbackURL: "/" })
+        : await authClient.signUp.email({ email, password, name: email.split("@")[0], callbackURL: "/" });
+      if (result.error) throw new Error(result.error.message || "操作失败");
+      window.location.href = "/";
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "操作失败，请重试");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="flex w-full max-w-sm flex-col gap-2">
-      {GROK_PROVIDERS.map((p) => (
-        <button
-          key={p.providerId}
-          type="button"
-          onClick={() => signIn(p.providerId, { callbackURL: "/" })}
-          className="w-full cursor-pointer rounded-md border border-neutral-300 px-4 py-2 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Continue with {p.label}
-        </button>
-      ))}
+    <div className="flex w-full max-w-sm flex-col gap-4">
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="邮箱" className="h-11 rounded-md border border-border bg-surface px-3" />
+        <input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="密码（至少 8 位）" className="h-11 rounded-md border border-border bg-surface px-3" />
+        <button disabled={busy} className="h-11 rounded-md bg-primary text-primary-fg disabled:opacity-60" type="submit">{busy ? "处理中…" : mode === "login" ? "登录" : "注册账号"}</button>
+      </form>
+      {message ? <p className="text-sm text-danger">{message}</p> : null}
+      <button type="button" className="text-sm text-muted underline" onClick={() => { setMode(mode === "login" ? "register" : "login"); setMessage(""); }}>
+        {mode === "login" ? "没有账号？注册账号" : "已有账号？返回登录"}
+      </button>
+      <div className="border-t border-border pt-3 text-center text-xs text-muted">也可以使用第三方登录</div>
+      {GROK_PROVIDERS.map((p) => <button key={p.providerId} type="button" onClick={() => signIn(p.providerId, { callbackURL: "/" })} className="h-10 rounded-md border border-border">Continue with {p.label}</button>)}
     </div>
   );
 }
