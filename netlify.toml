@@ -14,6 +14,12 @@
 [functions]
   directory = ".netlify/functions-internal"
 
+# Route SSR requests to the Nitro function. Static assets remain served from dist.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
+
 [[headers]]
   for = "/assets/*"
   [headers.values]
